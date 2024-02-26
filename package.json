@@ -1,0 +1,12 @@
+{
+  "name": "up",
+  "version": "1.0.0",
+  "description": "up is a command-line tool, which can upload your files to sftp with simple commands.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
