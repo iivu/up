@@ -1,11 +1,11 @@
 {
   "name": "up",
-  "version": "1.0.0",
+  "version": "1.0.0-beta.1",
   "description": "up is a command-line tool, which can upload your files to sftp with simple commands.",
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "build": "rollup -c"
+    "build": "rimraf ./dist/* && rollup -c"
   },
   "keywords": [
     "sftp",
@@ -21,13 +21,18 @@
     "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-typescript": "^11.1.6",
     "@types/node": "^20.11.20",
+    "@types/prompts": "^2.4.9",
+    "@types/ssh2-sftp-client": "^9.0.3",
     "prettier": "^3.2.5",
+    "rimraf": "^5.0.5",
     "rollup": "^4.12.0",
     "tslib": "^2.6.2",
     "typescript": "^5.3.3"
   },
   "dependencies": {
     "commander": "^12.0.0",
+    "glob": "^10.3.10",
+    "prompts": "^2.4.2",
     "ssh2-sftp-client": "^10.0.3"
   }
 }
