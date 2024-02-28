@@ -1,0 +1,9 @@
+{
+  "host": "<your-sftp-host>",
+  "port": 22,
+  "username": "<your-username>",
+  "password": "<your-password>",
+  "remotePath": "</your/remote/path>",
+  "localPath": "</your/local/path>",
+  "exclude": []
+}
