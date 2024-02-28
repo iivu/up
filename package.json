@@ -2,7 +2,9 @@
   "name": "up",
   "version": "1.0.0-beta.1",
   "description": "up is a command-line tool, which can upload your files to sftp with simple commands.",
-  "main": "index.js",
+  "bin": {
+    "up": "./dist/cli.mjs"
+  },
   "type": "module",
   "scripts": {
     "build": "rimraf ./dist/* && rollup -c"
@@ -13,9 +15,17 @@
     "command-line"
   ],
   "files": [
-    "dist"
+    "bin"
   ],
   "author": "Leo Cheung <leozhang621@gmail.com>",
+  "homepage": "https://github.com/iivu/up#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/iivu/up.git"
+  },
+  "bugs": {
+    "url": "https://github.com/iivu/up/issues"
+  },
   "license": "MIT",
   "devDependencies": {
     "@rollup/plugin-json": "^6.1.0",
