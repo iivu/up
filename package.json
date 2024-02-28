@@ -1,5 +1,5 @@
 {
-  "name": "up",
+  "name": "@iivu/up",
   "version": "1.0.0-beta.2",
   "description": "up is a command-line tool, which can upload your files to sftp with simple commands.",
   "bin": {
