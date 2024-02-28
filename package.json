@@ -1,9 +1,9 @@
 {
   "name": "up",
-  "version": "1.0.0-beta.1",
+  "version": "1.0.0-beta.2",
   "description": "up is a command-line tool, which can upload your files to sftp with simple commands.",
   "bin": {
-    "up": "./dist/cli.mjs"
+    "up": "./bin/cli.mjs"
   },
   "type": "module",
   "scripts": {
