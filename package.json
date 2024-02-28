@@ -7,7 +7,7 @@
   },
   "type": "module",
   "scripts": {
-    "build": "rimraf ./dist/* && rollup -c"
+    "build": "rimraf ./bin/* && rollup -c"
   },
   "keywords": [
     "sftp",
@@ -15,7 +15,8 @@
     "command-line"
   ],
   "files": [
-    "bin"
+    "bin",
+    "dist"
   ],
   "author": "Leo Cheung <leozhang621@gmail.com>",
   "homepage": "https://github.com/iivu/up#readme",
