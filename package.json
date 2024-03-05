@@ -1,6 +1,6 @@
 {
   "name": "@iivu/up",
-  "version": "1.0.0-beta.3",
+  "version": "1.0.0-beta.4",
   "description": "up is a command-line tool, which can upload your files to sftp with simple commands.",
   "bin": {
     "up": "./bin/cli.mjs"

@@ -40,7 +40,7 @@ typeof SuppressedError === "function" ? SuppressedError : function (error, suppr
 };
 
 var name = "@iivu/up";
-var version = "1.0.0-beta.3";
+var version = "1.0.0-beta.4";
 var description = "up is a command-line tool, which can upload your files to sftp with simple commands.";
 var bin = {
 	up: "./bin/cli.mjs"
