@@ -59,11 +59,12 @@ export async function upload(config: t.Config) {
   }
 }
 
-async function connect(config: t.ConnectConfig): Promise<SFTPClient> {
+async function connect(config: t.Config): Promise<SFTPClient> {
   const client = new SFTPClient('up');
+  const connectConfig = { host: config.host, port: config.port, username: config.username, password: config.password };
   try {
     log.info('Connecting to the server...');
-    await client.connect(config);
+    await client.connect(connectConfig as SFTPClient.ConnectOptions);
     return client;
   } catch (e: any) {
     log.error(`Failed to connect to the server: ${e.message}`);
