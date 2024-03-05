@@ -39,11 +39,11 @@ typeof SuppressedError === "function" ? SuppressedError : function (error, suppr
     return e.name = "SuppressedError", e.error = error, e.suppressed = suppressed, e;
 };
 
-var name = "up";
-var version = "1.0.0-beta.1";
+var name = "@iivu/up";
+var version = "1.0.0-beta.2";
 var description = "up is a command-line tool, which can upload your files to sftp with simple commands.";
 var bin = {
-	up: "./dist/cli.mjs"
+	up: "./bin/cli.mjs"
 };
 var type = "module";
 var scripts = {
@@ -190,9 +190,10 @@ function upload(config) {
 function connect(config) {
     return __awaiter(this, void 0, void 0, function* () {
         const client = new SFTPClient('up');
+        const connectConfig = { host: config.host, port: config.port, username: config.username, password: config.password };
         try {
             info('Connecting to the server...');
-            yield client.connect(config);
+            yield client.connect(connectConfig);
             return client;
         }
         catch (e) {
