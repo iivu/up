@@ -86,6 +86,7 @@ var dependencies = {
 	prompts: "^2.4.2",
 	"ssh2-sftp-client": "^10.0.3"
 };
+var packageManager = "pnpm@10.33.3+sha512.a19744364a7e248b92657a4ca5973f9354d21caf982579674b1c539f32c7420c47138ad8b1254df07aba9bc782d9b3029e3db34d5dbff974326eb74dac8ff489";
 var pkg = {
 	name: name,
 	version: version,
@@ -101,7 +102,8 @@ var pkg = {
 	bugs: bugs,
 	license: license,
 	devDependencies: devDependencies,
-	dependencies: dependencies
+	dependencies: dependencies,
+	packageManager: packageManager
 };
 
 var host = "<your-sftp-host>";
@@ -179,11 +181,13 @@ function upload(config) {
                 yield client.put(localFilePath, remoteFilePath);
             }
             success(`Upload completed successfully!`);
-            process.exit(0);
         }
         catch (e) {
             error(`Remote operation exception: ${e.message}`);
-            process.exit(1);
+            throw e;
+        }
+        finally {
+            yield client.end().catch(() => { });
         }
     });
 }
@@ -247,17 +251,18 @@ function parseLocalPath(config) {
  * and we have a file /home/user/project/index.html,
  * the remote file path will be /var/www/project/index.html
  */
-function mapLocalPathToRemote(localPath, config) {
+function mapLocalPathToRemote(localPaths, config) {
     const result = {};
-    localPath.forEach((file) => {
+    localPaths.forEach((file) => {
         if (file === config.localPath) {
             // the config.localPath is a file
-            const segments = file.split(path.sep);
-            result[file] = `${config.remotePath}/${segments[segments.length - 1]}`;
+            result[file] = path.posix.join(config.remotePath, path.basename(file));
         }
         else {
-            // the config.localPath is q directory
-            result[file] = file.replace(config.localPath, config.remotePath);
+            // the config.localPath is a directory
+            const relativePath = path.relative(config.localPath, file);
+            const posixRelativePath = relativePath.split(path.sep).join(path.posix.sep);
+            result[file] = path.posix.join(config.remotePath, posixRelativePath);
         }
     });
     return result;
@@ -302,18 +307,24 @@ command
 }));
 function doUpload() {
     return __awaiter(this, void 0, void 0, function* () {
-        const config = parseConfig(upConfigFilePath);
-        info(config);
-        info('Above is the final configuration to be used for the upload process.');
-        const confirm = yield prompts({
-            type: 'confirm',
-            name: 'value',
-            message: 'Confirm the configuration and continue?',
-            initial: true,
-        });
-        if (!confirm.value)
+        try {
+            const config = parseConfig(upConfigFilePath);
+            info(config);
+            info('Above is the final configuration to be used for the upload process.');
+            const confirm = yield prompts({
+                type: 'confirm',
+                name: 'value',
+                message: 'Confirm the configuration and continue?',
+                initial: true,
+            });
+            if (!confirm.value)
+                process.exit(0);
+            yield upload(config);
             process.exit(0);
-        yield upload(config);
+        }
+        catch (_a) {
+            process.exit(1);
+        }
     });
 }
 function initConfigFile() {

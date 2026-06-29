@@ -52,10 +52,11 @@ export async function upload(config: t.Config) {
       await client.put(localFilePath, remoteFilePath);
     }
     log.success(`Upload completed successfully!`);
-    process.exit(0);
   } catch (e: any) {
     log.error(`Remote operation exception: ${e.message}`);
-    process.exit(1);
+    throw e;
+  } finally {
+    await client.end().catch(() => {});
   }
 }
 
@@ -115,16 +116,17 @@ async function parseLocalPath(config: t.Config): Promise<{ dirs: string[]; files
  * and we have a file /home/user/project/index.html,
  * the remote file path will be /var/www/project/index.html
  */
-function mapLocalPathToRemote(localPath: string[], config: t.Config): Record<string, string> {
+function mapLocalPathToRemote(localPaths: string[], config: t.Config): Record<string, string> {
   const result: Record<string, string> = {};
-  localPath.forEach((file) => {
+  localPaths.forEach((file) => {
     if (file === config.localPath) {
       // the config.localPath is a file
-      const segments = file.split(path.sep);
-      result[file] = `${config.remotePath}/${segments[segments.length - 1]}`;
+      result[file] = path.posix.join(config.remotePath, path.basename(file));
     } else {
-      // the config.localPath is q directory
-      result[file] = file.replace(config.localPath, config.remotePath);
+      // the config.localPath is a directory
+      const relativePath = path.relative(config.localPath, file);
+      const posixRelativePath = relativePath.split(path.sep).join(path.posix.sep);
+      result[file] = path.posix.join(config.remotePath, posixRelativePath);
     }
   });
   return result;

@@ -7,7 +7,7 @@ import prompts from 'prompts';
 import { Command } from 'commander';
 
 import pkg from '../package.json';
-import configTemplate from './up.confog.template.json';
+import configTemplate from './up.config.template.json';
 import { parseConfig, upload } from './core';
 import * as t from './types';
 import * as log from './log';
@@ -28,17 +28,22 @@ command
   });
 
 async function doUpload() {
-  const config: t.Config = parseConfig(upConfigFilePath);
-  log.info(config);
-  log.info('Above is the final configuration to be used for the upload process.');
-  const confirm = await prompts({
-    type: 'confirm',
-    name: 'value',
-    message: 'Confirm the configuration and continue?',
-    initial: true,
-  });
-  if (!confirm.value) process.exit(0);
-  await upload(config);
+  try {
+    const config: t.Config = parseConfig(upConfigFilePath);
+    log.info(config);
+    log.info('Above is the final configuration to be used for the upload process.');
+    const confirm = await prompts({
+      type: 'confirm',
+      name: 'value',
+      message: 'Confirm the configuration and continue?',
+      initial: true,
+    });
+    if (!confirm.value) process.exit(0);
+    await upload(config);
+    process.exit(0);
+  } catch {
+    process.exit(1);
+  }
 }
 
 function initConfigFile() {
