@@ -33,6 +33,8 @@ Below is a complete example of `up.config.json`:
 - `remotePath`(required): the remote dir path you want to upload to, should be an absolute path.
 - `localPath`(required): the local file path you want to upload, can be relative or absolute, finally this path will be resolved to an absolute path
 - `exclude`: the files you want to exclude, should be an array of string, the string should be a glob pattern, like `['**/*.log', 'node_modules']`
+- `priority`: the files you want to upload first, should be an array of glob patterns. Files are uploaded in the order of the patterns, for example `["**/*.js", "**/*.css"]` uploads JS and CSS files before other files.
+- `priorityLast`: the files you want to upload last, should be an array of glob patterns. Defaults to `["**/*.html"]` so HTML entry files are uploaded after all static assets. Set it to `[]` to disable this default behavior.
 <br>
 
 **if `localPath` is a directory, `up` will upload all files in the directory, for example:**
@@ -43,6 +45,28 @@ Below is a complete example of `up.config.json`:
 **if `localPath` is a file, `up` will directly upload the file to the `remotePath`, for example**
 <br>
 **`/your/local/example.txt` is a file, `remotePath` is `/var/www/project`, when upload finished, the remote file url will be `/var/www/project/example.txt`**
+
+## Upload order
+By default, all `.html` files are uploaded last. This is useful when deploying a frontend project: visitors won't request the new HTML before its static assets (JS, CSS, images, etc.) are already in place.
+
+You can customize the order with `priority` and `priorityLast`:
+```json
+{
+  "host": "your-sftp-host",
+  "port": 22,
+  "username": "your-username",
+  "password": "your-password",
+  "remotePath": "/var/www/project",
+  "localPath": "./dist",
+  "exclude": [],
+  "priority": ["**/*.js", "**/*.css", "**/*.{png,jpg,jpeg,svg,webp,gif}"],
+  "priorityLast": ["**/*.html"]
+}
+```
+With this configuration, files are uploaded in the following order:
+1. `priority` files: JS, CSS, and image files (in the order listed)
+2. All other files
+3. `priorityLast` files: HTML files (by default)
 
 ## Commands and options
 - `up`: upload files to sftp, use the working directory's `up.config.json` as configuration file.

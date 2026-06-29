@@ -5,5 +5,7 @@
   "password": "<your-password>",
   "remotePath": "</your/remote/path>",
   "localPath": "</your/local/path>",
-  "exclude": []
+  "exclude": [],
+  "priority": [],
+  "priorityLast": ["**/*.html"]
 }

@@ -6,6 +6,7 @@ import prompts from 'prompts';
 import { Command } from 'commander';
 import SFTPClient from 'ssh2-sftp-client';
 import { glob } from 'glob';
+import { minimatch } from 'minimatch';
 
 /******************************************************************************
 Copyright (c) Microsoft Corporation.
@@ -21,7 +22,7 @@ LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
 OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 ***************************************************************************** */
-/* global Reflect, Promise, SuppressedError, Symbol */
+/* global Reflect, Promise, SuppressedError, Symbol, Iterator */
 
 
 function __awaiter(thisArg, _arguments, P, generator) {
@@ -39,72 +40,9 @@ typeof SuppressedError === "function" ? SuppressedError : function (error, suppr
     return e.name = "SuppressedError", e.error = error, e.suppressed = suppressed, e;
 };
 
-var name = "@iivu/up";
 var version = "1.0.0-beta.4";
-var description = "up is a command-line tool, which can upload your files to sftp with simple commands.";
-var bin = {
-	up: "./bin/cli.mjs"
-};
-var type = "module";
-var scripts = {
-	build: "rimraf ./bin/* && rollup -c"
-};
-var keywords = [
-	"sftp",
-	"upload",
-	"command-line"
-];
-var files = [
-	"bin",
-	"dist"
-];
-var author = "Leo Cheung <leozhang621@gmail.com>";
-var homepage = "https://github.com/iivu/up#readme";
-var repository = {
-	type: "git",
-	url: "git+https://github.com/iivu/up.git"
-};
-var bugs = {
-	url: "https://github.com/iivu/up/issues"
-};
-var license = "MIT";
-var devDependencies = {
-	"@rollup/plugin-json": "^6.1.0",
-	"@rollup/plugin-typescript": "^11.1.6",
-	"@types/node": "^20.11.20",
-	"@types/prompts": "^2.4.9",
-	"@types/ssh2-sftp-client": "^9.0.3",
-	prettier: "^3.2.5",
-	rimraf: "^5.0.5",
-	rollup: "^4.12.0",
-	tslib: "^2.6.2",
-	typescript: "^5.3.3"
-};
-var dependencies = {
-	commander: "^12.0.0",
-	glob: "^10.3.10",
-	prompts: "^2.4.2",
-	"ssh2-sftp-client": "^10.0.3"
-};
-var packageManager = "pnpm@10.33.3+sha512.a19744364a7e248b92657a4ca5973f9354d21caf982579674b1c539f32c7420c47138ad8b1254df07aba9bc782d9b3029e3db34d5dbff974326eb74dac8ff489";
 var pkg = {
-	name: name,
-	version: version,
-	description: description,
-	bin: bin,
-	type: type,
-	scripts: scripts,
-	keywords: keywords,
-	files: files,
-	author: author,
-	homepage: homepage,
-	repository: repository,
-	bugs: bugs,
-	license: license,
-	devDependencies: devDependencies,
-	dependencies: dependencies,
-	packageManager: packageManager
-};
+	version: version};
 
 var host = "<your-sftp-host>";
 var port = 22;
@@ -114,6 +52,11 @@ var remotePath = "</your/remote/path>";
 var localPath = "</your/local/path>";
 var exclude = [
 ];
+var priority = [
+];
+var priorityLast = [
+	"**/*.html"
+];
 var configTemplate = {
 	host: host,
 	port: port,
@@ -121,7 +64,9 @@ var configTemplate = {
 	password: password,
 	remotePath: remotePath,
 	localPath: localPath,
-	exclude: exclude
+	exclude: exclude,
+	priority: priority,
+	priorityLast: priorityLast
 };
 
 function success(msg) {
@@ -137,9 +82,59 @@ function warn(msg) {
     console.log('\x1b[33m[WARN] - %s\x1b[0m', msg);
 }
 
+/**
+ * Sort files so that files matching `priority` patterns are uploaded first,
+ * files matching `priorityLast` patterns are uploaded last, and all other
+ * files keep their original order in between.
+ */
+function sortFilesByPriority(files, config) {
+    var _a, _b;
+    const priority = (_a = config.priority) !== null && _a !== void 0 ? _a : [];
+    const priorityLast = (_b = config.priorityLast) !== null && _b !== void 0 ? _b : [];
+    const getPatternIndex = (file, patterns) => {
+        const relativePath = path.relative(config.localPath, file);
+        const posixRelativePath = relativePath.split(path.sep).join(path.posix.sep);
+        for (let i = 0; i < patterns.length; i++) {
+            if (minimatch(posixRelativePath, patterns[i]))
+                return i;
+        }
+        return -1;
+    };
+    const indexedFiles = files.map((file, index) => ({
+        file,
+        index,
+        priorityIndex: getPatternIndex(file, priority),
+        priorityLastIndex: getPatternIndex(file, priorityLast),
+    }));
+    indexedFiles.sort((a, b) => {
+        // Both files match a priority pattern: preserve the configured order.
+        if (a.priorityIndex !== -1 && b.priorityIndex !== -1) {
+            return a.priorityIndex - b.priorityIndex;
+        }
+        // Only one matches a priority pattern: it goes first.
+        if (a.priorityIndex !== -1)
+            return -1;
+        if (b.priorityIndex !== -1)
+            return 1;
+        // Both files match a priorityLast pattern: preserve the configured order.
+        if (a.priorityLastIndex !== -1 && b.priorityLastIndex !== -1) {
+            return a.priorityLastIndex - b.priorityLastIndex;
+        }
+        // Only one matches a priorityLast pattern: it goes last.
+        if (a.priorityLastIndex !== -1)
+            return 1;
+        if (b.priorityLastIndex !== -1)
+            return -1;
+        // Neither matches: keep the original traversal order.
+        return a.index - b.index;
+    });
+    return indexedFiles.map((item) => item.file);
+}
+
 const DEFAULT_CONFIG = {
     port: 22,
     exclude: [],
+    priorityLast: ['**/*.html'],
 };
 function parseConfig(configFilePth) {
     info(`Reading configuration from file: ${configFilePth}`);
@@ -237,6 +232,8 @@ function parseLocalPath(config) {
             });
             // ensure that the parent directory comes first
             result.dirs.sort((a, b) => a.length - b.length);
+            // sort files by priority so static assets are uploaded before HTML entry files
+            result.files = sortFilesByPriority(result.files, config);
             return result;
         }
         // fileStat is neither a file nor a directory
@@ -245,6 +242,7 @@ function parseLocalPath(config) {
     });
 }
 /**
+ * Map local file paths to remote file paths
  * Map local file paths to remote file paths
  * For example:
  * If localPath is /home/user/project and remotePath is /var/www/project,
@@ -285,9 +283,10 @@ function validateConfig(config) {
  * Make the localPath an absolute path
  */
 function normalizeConfig(config) {
-    var _a, _b;
+    var _a, _b, _c;
     config.port = (_a = config.port) !== null && _a !== void 0 ? _a : DEFAULT_CONFIG.port;
     config.exclude = (_b = config.exclude) !== null && _b !== void 0 ? _b : DEFAULT_CONFIG.exclude;
+    config.priorityLast = (_c = config.priorityLast) !== null && _c !== void 0 ? _c : DEFAULT_CONFIG.priorityLast;
     config.localPath = path.resolve(process.cwd(), config.localPath);
 }
 

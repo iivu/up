@@ -4,12 +4,14 @@ import process from 'node:process';
 import SFTPClient from 'ssh2-sftp-client';
 import { glob } from 'glob';
 
-import * as log from './log';
-import * as t from './types';
+import * as log from './log.js';
+import { sortFilesByPriority } from './sort.js';
+import * as t from './types.js';
 
-const DEFAULT_CONFIG: Pick<t.Config, 'port' | 'exclude'> = {
+const DEFAULT_CONFIG: Pick<t.Config, 'port' | 'exclude' | 'priorityLast'> = {
   port: 22,
   exclude: [],
+  priorityLast: ['**/*.html'],
 };
 
 export function parseConfig(configFilePth: string): t.Config {
@@ -102,6 +104,8 @@ async function parseLocalPath(config: t.Config): Promise<{ dirs: string[]; files
     });
     // ensure that the parent directory comes first
     result.dirs.sort((a, b) => a.length - b.length);
+    // sort files by priority so static assets are uploaded before HTML entry files
+    result.files = sortFilesByPriority(result.files, config);
     return result;
   }
   // fileStat is neither a file nor a directory
@@ -110,6 +114,7 @@ async function parseLocalPath(config: t.Config): Promise<{ dirs: string[]; files
 }
 
 /**
+ * Map local file paths to remote file paths
  * Map local file paths to remote file paths
  * For example:
  * If localPath is /home/user/project and remotePath is /var/www/project,
@@ -153,5 +158,6 @@ function validateConfig(config: t.Config) {
 function normalizeConfig(config: t.Config): void {
   config.port = config.port ?? DEFAULT_CONFIG.port;
   config.exclude = config.exclude ?? DEFAULT_CONFIG.exclude;
+  config.priorityLast = config.priorityLast ?? DEFAULT_CONFIG.priorityLast;
   config.localPath = path.resolve(process.cwd(), config.localPath);
 }

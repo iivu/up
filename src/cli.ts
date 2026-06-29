@@ -6,11 +6,11 @@ import process from 'node:process';
 import prompts from 'prompts';
 import { Command } from 'commander';
 
-import pkg from '../package.json';
-import configTemplate from './up.config.template.json';
-import { parseConfig, upload } from './core';
-import * as t from './types';
-import * as log from './log';
+import pkg from '../package.json' with { type: 'json' };
+import configTemplate from './up.config.template.json' with { type: 'json' };
+import { parseConfig, upload } from './core.js';
+import * as t from './types.js';
+import * as log from './log.js';
 
 const upConfigFilePath = path.resolve(process.cwd(), './up.config.json');
 const command = new Command();
