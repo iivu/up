@@ -40,7 +40,7 @@ typeof SuppressedError === "function" ? SuppressedError : function (error, suppr
     return e.name = "SuppressedError", e.error = error, e.suppressed = suppressed, e;
 };
 
-var version = "1.0.0-beta.4";
+var version = "1.0.0";
 var pkg = {
 	version: version};
 

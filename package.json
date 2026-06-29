@@ -1,9 +1,9 @@
 {
   "name": "@iivu/up",
-  "version": "1.0.0-beta.4",
+  "version": "1.0.0",
   "description": "up is a command-line tool, which can upload your files to sftp with simple commands.",
   "bin": {
-    "up": "./bin/cli.mjs"
+    "up": "bin/cli.mjs"
   },
   "type": "module",
   "scripts": {
@@ -48,5 +48,6 @@
     "minimatch": "^9.0.3",
     "prompts": "^2.4.2",
     "ssh2-sftp-client": "^10.0.3"
-  }
+  },
+  "packageManager": "pnpm@10.33.3+sha512.a19744364a7e248b92657a4ca5973f9354d21caf982579674b1c539f32c7420c47138ad8b1254df07aba9bc782d9b3029e3db34d5dbff974326eb74dac8ff489"
 }
